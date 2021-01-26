@@ -20,12 +20,15 @@ export class AppComponent implements AfterViewInit {
     let fileReader = new FileReader();
     fileReader.onload = (e) => {
       console.log(fileReader.result);
-      this.cards = (fileReader.result as String).split("\n").map(row => {
+      const lines = (fileReader.result as String).split("\n")
+      this.cards = lines.slice(1, lines.length).map(row => {
         const rowValues = row.split(",")
-        return new Card(rowValues[0], rowValues.slice(1, rowValues.length))
+        const blockedIds = rowValues.slice(1, rowValues.length).filter(value => value != "")
+        return new Card(rowValues[0], blockedIds)
       })
       this.cards.forEach(card => {
         card.updateBlockedCards()
+        console.log(card)
       })
       this.reRenderGraph()
     }
