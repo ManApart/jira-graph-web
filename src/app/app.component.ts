@@ -2,6 +2,10 @@ import { AfterViewInit, Component } from '@angular/core';
 import * as dracula from 'graphdracula';
 import { Card } from './card'
 
+const Graph = dracula.Graph;
+const Renderer = dracula.Renderer.Raphael;
+const Layout = dracula.Layout.Spring;
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -10,6 +14,7 @@ import { Card } from './card'
 export class AppComponent implements AfterViewInit {
   title = 'jira-graph-web';
   cards: Card[]
+  renderer: any
 
   ngAfterViewInit() {
     this.renderDefaultGraph()
@@ -21,27 +26,43 @@ export class AppComponent implements AfterViewInit {
     fileReader.onload = (e) => {
       console.log(fileReader.result);
       const lines = (fileReader.result as String).split("\n")
-      this.cards = lines.slice(1, lines.length).map(row => {
-        const rowValues = row.split(",")
-        const blockedIds = rowValues.slice(1, rowValues.length).filter(value => value != "")
-        return new Card(rowValues[0], blockedIds)
-      })
+
+      this.cards = lines
+        .slice(1, lines.length)
+        .map(this.parseCard)
+        .filter(card => card.id.length > 1)
+
       this.cards.forEach(card => {
         card.updateBlockedCards()
         console.log(card)
       })
+
       this.reRenderGraph()
     }
     fileReader.readAsText(file);
   }
 
+  parseCard(row): Card {
+    const rowValues = row.split(",")
+    const blockedIds = rowValues.slice(1, rowValues.length).filter(value => value.length > 1)
+    return new Card(rowValues[0], blockedIds)
+  }
 
+  reRenderGraph() {
+    const graph = new Graph();
+
+    this.cards.forEach(card => {
+      // graph.addNode(card.id, { label: "<a href=\"https://www.w3schools.com\">Visit W3Schools.com!</a>" });
+      graph.addNode(card.id, { label: card.id });
+      card.blockedIds.forEach(blockedId => {
+        graph.addEdge(card.id, blockedId, { directed: true });
+      })
+    })
+
+    this.renderGraph(graph)
+  }
 
   renderDefaultGraph() {
-    const Graph = dracula.Graph;
-    const Renderer = dracula.Renderer.Raphael;
-    const Layout = dracula.Layout.Spring;
-
     const graph = new Graph();
 
     graph.addEdge('Banana', 'Apple');
@@ -50,28 +71,19 @@ export class AppComponent implements AfterViewInit {
     graph.addEdge('Dragonfruit', 'Banana');
     graph.addEdge('Kiwi', 'Banana');
 
-    const layout = new Layout(graph);
-    const renderer = new Renderer('#paper', graph, 1000, 600);
-    renderer.draw();
+    this.renderGraph(graph)
   }
 
-  reRenderGraph() {
-    const Graph = dracula.Graph;
-    const Renderer = dracula.Renderer.Raphael;
-    const Layout = dracula.Layout.Spring;
 
-    const graph = new Graph();
-
-    this.cards.forEach(card => {
-      card.blockedIds.forEach(blockedId => {
-        graph.addEdge(card.id, blockedId);
-      })
-    })
-
+  renderGraph(graph) {
+    // if (this.renderer != null) {
+    //   this.renderer.clear();
+    // }
     const layout = new Layout(graph);
-    const renderer = new Renderer('#paper', graph, 1000, 600);
-    renderer.draw();
+    this.renderer = new Renderer('#paper', graph, 1000, 600);
+    this.renderer.draw();
   }
+
 
 }
 
