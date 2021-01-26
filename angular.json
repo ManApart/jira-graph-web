@@ -119,6 +119,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "jira-graph-web"
+    }
+  },
+  "defaultProject": "jira-graph-web",
+  "cli": {
+    "analytics": false
+  }
 }
