@@ -33,7 +33,7 @@ export class AppComponent implements AfterViewInit {
       this.cards = lines
         .slice(1, lines.length)
         .map(line => this.parseCard(line, idColumn, blockedColumns))
-        .filter(card => card.id.length > 1)
+        .filter(card => card != null && card.id != null && card.id.length > 1)
 
       this.cards.forEach(card => {
         card.updateBlockedCards()
