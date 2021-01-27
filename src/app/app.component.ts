@@ -26,10 +26,11 @@ export class AppComponent implements AfterViewInit {
     fileReader.onload = (e) => {
       console.log(fileReader.result);
       const lines = (fileReader.result as String).split("\n")
+      const blockedColumns = this.findBlockedColumns(lines[0])
 
       this.cards = lines
         .slice(1, lines.length)
-        .map(this.parseCard)
+        .map(line => this.parseCard(line, blockedColumns))
         .filter(card => card.id.length > 1)
 
       this.cards.forEach(card => {
@@ -42,10 +43,23 @@ export class AppComponent implements AfterViewInit {
     fileReader.readAsText(file);
   }
 
-  parseCard(row): Card {
-    const rowValues = row.split(",")
-    const blockedIds = rowValues.slice(1, rowValues.length).filter(value => value.length > 1)
-    return new Card(rowValues[0], blockedIds)
+  findBlockedColumns(line: string) {
+    const row = line.split(",")
+    const indices = []
+    var i
+    for (i = 1; i < row.length; i++) {
+      if (row[i].includes("Blocks")) {
+        indices.push(i)
+      }
+    }
+
+    return indices
+  }
+
+  parseCard(line: String, blockedColumns: number[]): Card {
+    const row: String[] = line.split(",")
+    const blockedIds = blockedColumns.map(i => { return row[i] }).filter(value => value != null && value.length > 1)
+    return new Card(row[0], blockedIds)
   }
 
   reRenderGraph() {
