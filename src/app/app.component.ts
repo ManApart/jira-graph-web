@@ -24,13 +24,15 @@ export class AppComponent implements AfterViewInit {
     const file = event.target.files[0]
     let fileReader = new FileReader();
     fileReader.onload = (e) => {
-      console.log(fileReader.result);
+      // const lines = (fileReader.result as String).replace("\"\\(.*?\\)\"", "").split("\n")
       const lines = (fileReader.result as String).split("\n")
+      console.log(lines);
       const blockedColumns = this.findBlockedColumns(lines[0])
+      const idColumn = this.findIdColumn(lines[0])
 
       this.cards = lines
         .slice(1, lines.length)
-        .map(line => this.parseCard(line, blockedColumns))
+        .map(line => this.parseCard(line, idColumn, blockedColumns))
         .filter(card => card.id.length > 1)
 
       this.cards.forEach(card => {
@@ -43,7 +45,18 @@ export class AppComponent implements AfterViewInit {
     fileReader.readAsText(file);
   }
 
-  findBlockedColumns(line: string) {
+  findIdColumn(line: string): number {
+    const row = line.split(",")
+    var i
+    for (i = 1; i < row.length; i++) {
+      if (row[i] == "Issue Key") {
+        return i
+      }
+    }
+    return -1
+  }
+
+  findBlockedColumns(line: string): number[] {
     const row = line.split(",")
     const indices = []
     var i
@@ -56,10 +69,10 @@ export class AppComponent implements AfterViewInit {
     return indices
   }
 
-  parseCard(line: String, blockedColumns: number[]): Card {
+  parseCard(line: String, idColumn: number, blockedColumns: number[]): Card {
     const row: String[] = line.split(",")
     const blockedIds = blockedColumns.map(i => { return row[i] }).filter(value => value != null && value.length > 1)
-    return new Card(row[0], blockedIds)
+    return new Card(row[idColumn], blockedIds)
   }
 
   reRenderGraph() {
