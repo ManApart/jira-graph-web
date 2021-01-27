@@ -49,7 +49,7 @@ export class AppComponent implements AfterViewInit {
     const row = line.split(",")
     var i
     for (i = 1; i < row.length; i++) {
-      if (row[i] == "Issue Key") {
+      if (row[i].toLocaleLowerCase() == "issue key") {
         return i
       }
     }
